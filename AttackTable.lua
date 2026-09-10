@@ -75,11 +75,18 @@ local function InitTable()
 	end
 end
 
+local function UpdateField(key, value)
+	rows[key]:SetText(value)
+end
+local function UpdateTable()
+	UpdateField("Title", GetTitle())
+end
+
 InitTable()
 
 local function UpdateFrame()
 	if UnitExists("target") and UnitCanAttack("player", "target") then
-		rows["Title"]:SetText(GetTitle())
+		UpdateTable()
 		frame:Show()
 	else
 		frame:Hide()
