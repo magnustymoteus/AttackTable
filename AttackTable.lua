@@ -1,7 +1,7 @@
 AttackTable = AttackTable or {}
 
 local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-frame:SetSize(200, 200)
+frame:SetSize(200, 228)
 frame:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background" })
 frame:SetBackdropColor(0, 0, 0, 0.8)
 frame:SetMovable(true)
@@ -127,6 +127,22 @@ end
 
 InitTable()
 
+-- Parry and block only happen when attacking from the front
+local toggle = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+toggle:SetSize(120, 20)
+toggle:SetPoint("BOTTOM", frame, 0, 6)
+
+local function UpdateToggleText()
+	toggle:SetText(AttackTable.config.attackFromFront and "Position: Front" or "Position: Behind")
+end
+
+toggle:SetScript("OnClick", function()
+	AttackTable.config.attackFromFront = not AttackTable.config.attackFromFront
+	AttackTableDB.attackFromFront = AttackTable.config.attackFromFront
+	UpdateToggleText()
+	UpdateTable()
+end)
+
 local function UpdateFrame()
 	if UnitExists("target") and UnitCanAttack("player", "target") then
 		UpdateTable()
@@ -136,8 +152,25 @@ local function UpdateFrame()
 	end
 end
 
+local function OnEvent(self, event, addonName)
+	if event == "ADDON_LOADED" then
+		if addonName == "AttackTable" then
+			AttackTableDB = AttackTableDB or {}
+			if AttackTableDB.attackFromFront == nil then
+				AttackTableDB.attackFromFront = true
+			end
+			AttackTable.config.attackFromFront = AttackTableDB.attackFromFront
+			UpdateToggleText()
+		end
+		return
+	end
+	UpdateFrame()
+end
+
+-- Saved variables are only available once ADDON_LOADED fires
+frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 -- Weapon swaps, buffs and talents change skill/hit/expertise/crit
 frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 frame:RegisterUnitEvent("UNIT_AURA", "player")
-frame:SetScript("OnEvent", UpdateFrame)
+frame:SetScript("OnEvent", OnEvent)
