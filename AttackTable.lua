@@ -55,11 +55,38 @@ local function BuildRow(cols)
 	return text
 end
 
+-- Order of the one-roll attack table: earlier outcomes push later ones off
+-- the table once the total reaches 100%. Hit takes whatever is left.
+local outcomes = {
+	{ "Miss", AttackTable.GetMissChance },
+	{ "Dodge", AttackTable.GetDodgeChance },
+	{ "Parry", AttackTable.GetParryChance },
+	{ "Glancing Blow", AttackTable.GetGlancingChance },
+	{ "Block", AttackTable.GetBlockChance },
+	{ "Crit", AttackTable.GetCritChance },
+	{ "Crushing Blow", AttackTable.GetCrushingChance },
+}
+
 local function GetTitle()
 	local target = "target"
 	local level = UnitLevel(target)
 	local name = UnitName(target)
+	if level <= 0 then
+		level = "??"
+	end
 	return name .. " (" .. level .. ")"
+end
+
+local function GetHandChances(hand)
+	local chances = {}
+	local remaining = 1
+	for _, outcome in ipairs(outcomes) do
+		local key, getChance = outcome[1], outcome[2]
+		chances[key] = math.min(getChance(hand), remaining)
+		remaining = remaining - chances[key]
+	end
+	chances["Hit"] = remaining
+	return chances
 end
 
 local function InitTable()
@@ -69,6 +96,7 @@ local function InitTable()
 		if key == "Title" then
 			row = { rows[key] }
 			text = BuildRow(row)
+			text:SetFontHeight(12.5)
 			currY = currY - 10
 		else
 			text = BuildRow(row)
@@ -82,7 +110,19 @@ local function UpdateField(key, value)
 end
 local function UpdateTable()
 	UpdateField("Title", GetTitle())
-	UpdateField("Miss", table.concat(AttackTable.GetMissField(), "/"))
+	local handChances = {}
+	for _, hand in ipairs(AttackTable.GetHands()) do
+		table.insert(handChances, GetHandChances(hand))
+	end
+	for _, key in ipairs(rowOrder) do
+		if key ~= "Title" then
+			local values = {}
+			for _, chances in ipairs(handChances) do
+				table.insert(values, string.format("%.1f%%", chances[key] * 100))
+			end
+			UpdateField(key, table.concat(values, "/"))
+		end
+	end
 end
 
 InitTable()
@@ -97,4 +137,7 @@ local function UpdateFrame()
 end
 
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+-- Weapon swaps, buffs and talents change skill/hit/expertise/crit
+frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+frame:RegisterUnitEvent("UNIT_AURA", "player")
 frame:SetScript("OnEvent", UpdateFrame)

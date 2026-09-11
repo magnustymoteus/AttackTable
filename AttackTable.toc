@@ -1,9 +1,15 @@
-
-## Interface: 20506 
+## Interface: 20506
 ## Version: 1.0.0
 ## Title: Attack Table
-## Notes: Test 
+## Notes: Test
 ## Author: magnustymoteus
 
-AttackTable.lua
+Common.lua
 Miss.lua
+Dodge.lua
+Parry.lua
+Glancing.lua
+Block.lua
+Crit.lua
+Crushing.lua
+AttackTable.lua
