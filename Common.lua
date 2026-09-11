@@ -51,6 +51,5 @@ end
 
 -- Hit chance from hit rating plus non-rating sources (talents like Precision)
 function AttackTable.GetHitBonus()
-	local talentHit = GetHitModifier and GetHitModifier() or 0
-	return (GetCombatRatingBonus(CR_HIT_MELEE) + talentHit) / 100
+	return (GetCombatRatingBonus(CR_HIT_MELEE) + GetHitModifier()) / 100
 end
