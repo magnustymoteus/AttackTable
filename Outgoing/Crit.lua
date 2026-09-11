@@ -11,9 +11,9 @@ gained from auras (talents, crit rating on gear, buffs, consumables), not on cri
 from agility.
 
 Level 73 boss with 350 skill: -4.8% compared to the character sheet ]]
-AttackTable = AttackTable or {}
+local Outgoing = AttackTable.Outgoing
 
-function AttackTable.GetCritChance(hand)
+function Outgoing.GetCritChance(hand)
 	local sheetCrit = GetCritChance() / 100
 	local skillDiff = hand.skill - AttackTable.GetTargetDefense()
 	local factor = skillDiff < 0 and 0.002 or 0.0004

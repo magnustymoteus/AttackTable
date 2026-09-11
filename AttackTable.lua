@@ -1,7 +1,7 @@
 AttackTable = AttackTable or {}
 
 local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-frame:SetSize(200, 228)
+frame:SetSize(250, 248)
 frame:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background" })
 frame:SetBackdropColor(0, 0, 0, 0.8)
 frame:SetMovable(true)
@@ -13,6 +13,9 @@ frame:SetPoint("CENTER")
 frame:Hide()
 
 local currY = -10
+local columnX = { 10, 105, 185 }
+-- Outgoing (your attacks on the mob) and incoming (the mob's attacks on you)
+local COLUMN_HEADERS = { "", "Outgoing", "Incoming" }
 local rowOrder = {
 	"Title",
 	"Miss",
@@ -45,27 +48,37 @@ local function CreateText(str, posX, posY, fontHeight)
 end
 
 local function BuildRow(cols)
-	local currX = 10
-	local text
-	for _, col in ipairs(cols) do
-		text = CreateText(col, currX, currY, 10)
-		currX = currX + 100
+	local texts = {}
+	for i, col in ipairs(cols) do
+		table.insert(texts, CreateText(col, columnX[i], currY, 10))
 	end
 	currY = currY - 20
-	return text
+	return texts
 end
 
 -- Order of the one-roll attack table: earlier outcomes push later ones off
 -- the table once the total reaches 100%. Hit takes whatever is left.
-local outcomes = {
-	{ "Miss", AttackTable.GetMissChance },
-	{ "Dodge", AttackTable.GetDodgeChance },
-	{ "Parry", AttackTable.GetParryChance },
-	{ "Glancing Blow", AttackTable.GetGlancingChance },
-	{ "Block", AttackTable.GetBlockChance },
-	{ "Crit", AttackTable.GetCritChance },
-	{ "Crushing Blow", AttackTable.GetCrushingChance },
+local outcomeOrder = {
+	{ "Miss", "GetMissChance" },
+	{ "Dodge", "GetDodgeChance" },
+	{ "Parry", "GetParryChance" },
+	{ "Glancing Blow", "GetGlancingChance" },
+	{ "Block", "GetBlockChance" },
+	{ "Crit", "GetCritChance" },
+	{ "Crushing Blow", "GetCrushingChance" },
 }
+
+-- side is AttackTable.Outgoing or AttackTable.Incoming
+local function BuildOutcomes(side)
+	local outcomes = {}
+	for _, outcome in ipairs(outcomeOrder) do
+		table.insert(outcomes, { outcome[1], side[outcome[2]] })
+	end
+	return outcomes
+end
+
+local outgoing = BuildOutcomes(AttackTable.Outgoing)
+local incoming = BuildOutcomes(AttackTable.Incoming)
 
 local function GetTitle()
 	local target = "target"
@@ -77,7 +90,7 @@ local function GetTitle()
 	return name .. " (" .. level .. ")"
 end
 
-local function GetHandChances(hand)
+local function RollTable(outcomes, hand)
 	local chances = {}
 	local remaining = 1
 	for _, outcome in ipairs(outcomes) do
@@ -91,43 +104,46 @@ end
 
 local function InitTable()
 	for _, key in ipairs(rowOrder) do
-		local row = { key, rows[key] }
-		local text
 		if key == "Title" then
-			row = { rows[key] }
-			text = BuildRow(row)
+			local text = BuildRow({ rows[key] })[1]
 			text:SetFontHeight(12.5)
 			currY = currY - 10
+			rows[key] = text
+			BuildRow(COLUMN_HEADERS)
 		else
-			text = BuildRow(row)
+			local texts = BuildRow({ key, rows[key], rows[key] })
+			rows[key] = { outgoing = texts[2], incoming = texts[3] }
 		end
-		rows[key] = text
 	end
 end
 
-local function UpdateField(key, value)
-	rows[key]:SetText(value)
+local function FormatChance(chance)
+	return string.format("%.1f%%", chance * 100)
 end
+
 local function UpdateTable()
-	UpdateField("Title", GetTitle())
+	rows["Title"]:SetText(GetTitle())
 	local handChances = {}
-	for _, hand in ipairs(AttackTable.GetHands()) do
-		table.insert(handChances, GetHandChances(hand))
+	for _, hand in ipairs(AttackTable.Outgoing.GetHands()) do
+		table.insert(handChances, RollTable(outgoing, hand))
 	end
+	local incomingChances = RollTable(incoming)
 	for _, key in ipairs(rowOrder) do
 		if key ~= "Title" then
 			local values = {}
 			for _, chances in ipairs(handChances) do
-				table.insert(values, string.format("%.1f%%", chances[key] * 100))
+				table.insert(values, FormatChance(chances[key]))
 			end
-			UpdateField(key, table.concat(values, "/"))
+			rows[key].outgoing:SetText(table.concat(values, "/"))
+			rows[key].incoming:SetText(FormatChance(incomingChances[key]))
 		end
 	end
 end
 
 InitTable()
 
--- Parry and block only happen when attacking from the front
+-- Applies both ways: mobs can't parry or block from behind, and you can't
+-- dodge, parry or block attacks from behind
 local toggle = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 toggle:SetSize(120, 20)
 toggle:SetPoint("BOTTOM", frame, 0, 6)
@@ -170,7 +186,7 @@ end
 -- Saved variables are only available once ADDON_LOADED fires
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_TARGET_CHANGED")
--- Weapon swaps, buffs and talents change skill/hit/expertise/crit
+-- Weapon swaps, buffs and talents change skill/hit/expertise/crit/avoidance
 frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 frame:RegisterUnitEvent("UNIT_AURA", "player")
 frame:SetScript("OnEvent", OnEvent)

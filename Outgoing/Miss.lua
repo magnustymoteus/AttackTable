@@ -14,23 +14,23 @@ If dual-wielding, add 19% (white swings only; yellow attacks don't get this pena
 Mobs below level 10: miss chance is multiplied by (mob level / 10)
 
 Level 73 boss with 350 skill: 8% base miss, 9% of +hit needed to reach 0% ]]
-AttackTable = AttackTable or {}
+local Outgoing = AttackTable.Outgoing
 
-function AttackTable.GetMissChance(hand)
-	local diff = AttackTable.GetSkillDiff(hand.skill)
+function Outgoing.GetMissChance(hand)
+	local diff = Outgoing.GetSkillDiff(hand.skill)
 	local miss = 0.05 + diff * 0.001
 	local suppression = 0
 	if diff > 10 then
 		miss = 0.05 + diff * 0.002
 		suppression = (diff - 10) * 0.002
 	end
-	if AttackTable.IsDualWielding() then
+	if Outgoing.IsDualWielding() then
 		miss = miss + 0.19
 	end
 	local level = AttackTable.GetTargetLevel()
 	if level < 10 then
 		miss = miss * level / 10
 	end
-	miss = miss - math.max(0, AttackTable.GetHitBonus() - suppression)
+	miss = miss - math.max(0, Outgoing.GetHitBonus() - suppression)
 	return math.max(0, miss)
 end

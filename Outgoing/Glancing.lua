@@ -5,9 +5,9 @@
 
 Only white (auto attack) swings can glance; yellow attacks never do.
 Level 73 boss with 350 skill: 24% ]]
-AttackTable = AttackTable or {}
+local Outgoing = AttackTable.Outgoing
 
-function AttackTable.GetGlancingChance(hand)
+function Outgoing.GetGlancingChance(hand)
 	local skill = math.min(hand.skill, UnitLevel("player") * 5)
-	return math.max(0, 0.06 + AttackTable.GetSkillDiff(skill) * 0.012)
+	return math.max(0, 0.06 + Outgoing.GetSkillDiff(skill) * 0.012)
 end

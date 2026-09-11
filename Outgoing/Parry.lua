@@ -12,13 +12,13 @@ minus .25% per expertise point
 
 Only possible when attacking from the front.
 Level 73 boss with 350 skill: 14% ]]
-AttackTable = AttackTable or {}
+local Outgoing = AttackTable.Outgoing
 
-function AttackTable.GetParryChance(hand)
+function Outgoing.GetParryChance(hand)
 	if not AttackTable.config.attackFromFront then
 		return 0
 	end
-	local diff = AttackTable.GetSkillDiff(hand.skill)
+	local diff = Outgoing.GetSkillDiff(hand.skill)
 	local factor = diff > 10 and 0.006 or 0.001
 	return math.max(0, 0.05 + diff * factor - hand.expertise)
 end

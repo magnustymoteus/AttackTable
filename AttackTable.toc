@@ -6,11 +6,20 @@
 ## SavedVariablesPerCharacter: AttackTableDB
 
 Common.lua
-Miss.lua
-Dodge.lua
-Parry.lua
-Glancing.lua
-Block.lua
-Crit.lua
-Crushing.lua
+Outgoing\Common.lua
+Outgoing\Miss.lua
+Outgoing\Dodge.lua
+Outgoing\Parry.lua
+Outgoing\Glancing.lua
+Outgoing\Block.lua
+Outgoing\Crit.lua
+Outgoing\Crushing.lua
+Incoming\Common.lua
+Incoming\Miss.lua
+Incoming\Dodge.lua
+Incoming\Parry.lua
+Incoming\Glancing.lua
+Incoming\Block.lua
+Incoming\Crit.lua
+Incoming\Crushing.lua
 AttackTable.lua

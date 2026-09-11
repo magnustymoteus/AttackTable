@@ -13,9 +13,9 @@ lower dodge than the formula:
     vs level 60 mob: 4.04% (formula 5%)
     vs level 63 mob: 5.93% (formula 6.5%)
 No formula for this is known, so it is not applied here. ]]
-AttackTable = AttackTable or {}
+local Outgoing = AttackTable.Outgoing
 
-function AttackTable.GetDodgeChance(hand)
-	local dodge = 0.05 + AttackTable.GetSkillDiff(hand.skill) * 0.001
+function Outgoing.GetDodgeChance(hand)
+	local dodge = 0.05 + Outgoing.GetSkillDiff(hand.skill) * 0.001
 	return math.max(0, dodge - hand.expertise)
 end
