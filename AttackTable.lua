@@ -1,3 +1,5 @@
+AttackTable = AttackTable or {}
+
 local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 frame:SetSize(200, 200)
 frame:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background" })
@@ -80,6 +82,7 @@ local function UpdateField(key, value)
 end
 local function UpdateTable()
 	UpdateField("Title", GetTitle())
+	UpdateField("Miss", table.concat(AttackTable.GetMissField(), "/"))
 end
 
 InitTable()
